@@ -27,7 +27,7 @@ func (s *TodoService) authorizeUser(token string) (*dtos.UserDTO, *error) {
 	return userCredantials, nil
 }
 
-func (s *TodoService) GetTodoByUserId(request *Requests.GetUserTodosRequest) (*[]domain.Todo, *error) {
+func (s *TodoService) GetTodoByUserId(request *Requests.GetUserTodosRequest) (*[]domain.Todo, *error) { // should change the response type
 
 	userCredantials, err := s.authorizeUser(request.Token)
 	if err != nil {
