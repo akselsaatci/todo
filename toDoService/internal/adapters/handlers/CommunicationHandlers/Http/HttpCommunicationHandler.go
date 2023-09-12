@@ -16,9 +16,9 @@ func NewHttpCommunicationHandler() *HttpCommunicationHandler {
 	return &HttpCommunicationHandler{}
 }
 
-func (s *HttpCommunicationHandler) AuthorizeUserByToken(token string) (*dtos.UserDTO, error) {
+func (s *HttpCommunicationHandler) AuthorizeUserByToken(token string) (*dtos.UserDTO, *error) {
 	// implemented very bad im gonna change these
-	requestURL := "http://localhost:8080"
+	requestURL := "http://localhost:8080/validate"
 
 	requestData := map[string]string{
 		"token": token,
@@ -26,25 +26,26 @@ func (s *HttpCommunicationHandler) AuthorizeUserByToken(token string) (*dtos.Use
 
 	requestDataBytes, err := json.Marshal(requestData)
 	if err != nil {
-		return nil, err
+		return nil, &err
 	}
 
 	requestBody := bytes.NewBuffer(requestDataBytes)
 
 	res, err := http.Post(requestURL, "application/json", requestBody)
 	if err != nil {
-		return nil, err
+		return nil, &err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		// :P
-		return nil, errors.New(fmt.Sprint(res.StatusCode))
+		err = errors.New(fmt.Sprint(res.StatusCode))
+		return nil, &err
 	}
 
 	var userDTO dtos.UserDTO
 	if err := json.NewDecoder(res.Body).Decode(&userDTO); err != nil {
-		return nil, err
+		return nil, &err
 	}
 
 	return &userDTO, nil
