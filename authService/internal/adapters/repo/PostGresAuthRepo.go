@@ -14,7 +14,7 @@ type AuthPostgresRepository struct {
 }
 
 func NewAuthPostgresRepository() *AuthPostgresRepository {
-	host := "localhost"
+	host := "db"
 	port := "5432"
 	user := "postgres"
 	password := "admin"
