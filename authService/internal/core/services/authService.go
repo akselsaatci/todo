@@ -30,7 +30,7 @@ func (a *AuthService) AuthorizeUser(username string, password string) (string, e
 		return "", &CustomErrors.UserNotFoundError{
 			Message: "Kullanıcı bulunamadı",
 			Code:    "404",
-		} // Kullanıcı bulunamadığında bir hata döndür
+		} 
 	}
 
 	token, err := a.tokenSerivce.GenerateToken(user.ID.String(), user.UserName, user.NameLastName)
@@ -38,7 +38,7 @@ func (a *AuthService) AuthorizeUser(username string, password string) (string, e
 		return "", fmt.Errorf("Token oluştururken hata oluştu!") // Token oluşturma hatası durumunu geri döndür
 	}
 
-	return *token, nil // Başarılı sonucu geri döndür
+	return *token, nil 
 }
 
 func (a *AuthService) ValidateToken(token string) (*dtos.UserDTO, error) {
