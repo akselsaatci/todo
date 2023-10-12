@@ -1,5 +1,5 @@
 package Requests
 
 type ValidateTokenRequest struct {
-	Token string
+	Token string `json:"token" xml:"token" binding:"required"`
 }

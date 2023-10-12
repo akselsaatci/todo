@@ -1,10 +1,15 @@
 package CustomErrors
 
 type UserNotFoundError struct {
-	Message string
-	Code    string
 }
 
 func (e *UserNotFoundError) Error() string {
-	return e.Code + " " + e.Message
+	return "User couldn't found!"
+}
+
+type InvalidTokenError struct {
+}
+
+func (e *InvalidTokenError) Error() string {
+	return "Invalid token!"
 }

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: admin
+  todo_api:
+    build:
+      context: ./toDoService
+      args:
+        - DATABASE_HOST=db
+        - DATABASE_PORT=5432
+        - DATABASE_USER=postgres
+        - DATABASE_PASSWORD=admin
+        - DATABASE_NAME=todo
+        - AUTH_SERVICE_URL=http://auth_api:8080
+        - SERVER_PORT=3000
+    ports:
+      - 3000:3000
+    restart: on-failure
+    depends_on:
+      - db
+  auth_api:
+    build:
+      context: ./authService
+      args:
+        - DATABASE_HOST=db
+        - DATABASE_PORT=5432
+        - DATABASE_USER=postgres
+        - DATABASE_PASSWORD=admin
+        - DATABASE_NAME=auth
+        - SERVER_PORT=8080
+        - JWT_SECRET_KEY=qwe
+    ports:
+      - 8080:8080
+    restart: on-failure
+    depends_on:
+      - db

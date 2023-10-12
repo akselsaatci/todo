@@ -38,6 +38,13 @@ func (h *HTTPHandler) AuthorizeUser(ctx *gin.Context) {
 		return
 	}
 
+	if errors.Is(err, &CustomErrors.InvalidTokenError{}) {
+		ctx.JSON(401, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	if err != nil {
 		ctx.JSON(400, gin.H{
 			"error": err.Error(),
@@ -56,6 +63,11 @@ func (h *HTTPHandler) ValidateToken(ctx *gin.Context) {
 	}
 
 	token, err := h.authService.ValidateToken(req.Token)
+
+	if errors.Is(err, &CustomErrors.InvalidTokenError{}) {
+		ctx.AbortWithError(401, err)
+		return
+	}
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{

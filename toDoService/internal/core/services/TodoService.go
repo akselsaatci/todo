@@ -2,8 +2,10 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"time"
+	"toDoService/internal/core/customErrors"
 	"toDoService/internal/core/domain"
 	"toDoService/internal/core/dtos"
 	"toDoService/internal/core/dtos/Requests"
@@ -19,7 +21,7 @@ func NewTodoService(db ports.ToDoRepository, comHandler ports.CoomunactionHandle
 	return &TodoService{db: db, comHandler: comHandler}
 }
 
-func (s *TodoService) authorizeUser(token string) (*dtos.UserDTO, *error) {
+func (s *TodoService) authorizeUser(token string) (*dtos.UserDTO, error) {
 	userCredantials, err := s.comHandler.AuthorizeUserByToken(token)
 	if err != nil {
 		return nil, err
@@ -27,16 +29,17 @@ func (s *TodoService) authorizeUser(token string) (*dtos.UserDTO, *error) {
 	return userCredantials, nil
 }
 
-func (s *TodoService) GetTodoByUserId(request *Requests.GetUserTodosRequest) (*[]domain.Todo, *error) { // should change the response type
+func (s *TodoService) GetTodoByUserId(token string) (*[]domain.Todo, error) { // should change the response type
 
-	userCredantials, err := s.authorizeUser(request.Token)
+	userCredantials, err := s.authorizeUser(token)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
-	parsedId, parseErr := uuid.Parse(userCredantials.ID)
+	parsedId, err := uuid.Parse(userCredantials.ID)
 
-	if parseErr != nil {
-		return nil, &parseErr
+	if err != nil {
+		return nil, err
 	}
 
 	res, err := s.db.FindTodosByUserId(parsedId)
@@ -46,25 +49,29 @@ func (s *TodoService) GetTodoByUserId(request *Requests.GetUserTodosRequest) (*[
 	return res, nil
 
 }
-func (s *TodoService) UpdateTodo(request *Requests.UpdateTodoRequest) *error {
-	userCredantials, err := s.authorizeUser(request.Token)
+func (s *TodoService) UpdateTodo(request *Requests.UpdateTodoRequest, token string) error {
+	userCredantials, err := s.authorizeUser(token)
 	if err != nil {
 		return err
 	}
 	parsedId, parseErr := uuid.Parse(userCredantials.ID)
 
 	if parseErr != nil {
-		return &parseErr
+		return parseErr
 	}
 
-	existingTodo, err := s.db.FindTodoById(request.TodoId)
+	requestTodoId, err := uuid.Parse(request.TodoId)
+	if err != nil {
+		return err
+	}
+	existingTodo, err := s.db.FindTodoById(requestTodoId)
 	if err != nil {
 		return err
 	}
 
 	if existingTodo.UserId != parsedId {
-		newErr := errors.New("Unauthorized Request!") // TODO make these same errors as a new file
-		return &newErr
+		var newErr error = &customErrors.UnauthorizedError{} // TODO make these same customErrors as a new file
+		return newErr
 	}
 
 	existingTodo.Title = request.Title
@@ -79,18 +86,18 @@ func (s *TodoService) UpdateTodo(request *Requests.UpdateTodoRequest) *error {
 	return err
 
 }
-func (s *TodoService) CreateTodo(request *Requests.CreateTodoRequest) *error {
-	userCredantials, err := s.authorizeUser(request.Token)
+func (s *TodoService) CreateTodo(request *Requests.CreateTodoRequest, token string) error {
+	userCredantials, err := s.authorizeUser(token)
 	if err != nil {
 		return err
 	}
 	parsedId, parseErr := uuid.Parse(userCredantials.ID)
 
 	if parseErr != nil {
-		return &parseErr
+		return parseErr
 	}
 	newTodo := &domain.Todo{
-		ID:             uuid.UUID{},
+		ID:             uuid.New(),
 		UserId:         parsedId,
 		Title:          request.Title,
 		Description:    request.Description,
@@ -102,25 +109,30 @@ func (s *TodoService) CreateTodo(request *Requests.CreateTodoRequest) *error {
 	return err
 
 }
-func (s *TodoService) DeleteTodo(request *Requests.DeleteTodoRequest) *error {
-	userCredantials, err := s.authorizeUser(request.Token)
+func (s *TodoService) DeleteTodo(todoId string, token string) error {
+	userCredantials, err := s.authorizeUser(token)
 	if err != nil {
 		return err
 	}
 	parsedUserId, parseErr := uuid.Parse(userCredantials.ID)
 
 	if parseErr != nil {
-		return &parseErr
+		return parseErr
 	}
 
-	existingToDo, err := s.db.FindTodoById(request.TodoId)
+	parsedTodoId, parseErr := uuid.Parse(todoId)
+	if parseErr != nil {
+		return parseErr
+	}
+
+	existingToDo, err := s.db.FindTodoById(parsedTodoId)
 
 	if err != nil {
 		return err
 	}
 	if existingToDo.UserId != parsedUserId {
 		newErr := errors.New("Unauthorized Request")
-		return &newErr
+		return newErr
 	}
 	err = s.db.DeleteTodo(existingToDo)
 	return err

@@ -13,12 +13,20 @@ type AuthPostgresRepository struct {
 	db *gorm.DB
 }
 
-func NewAuthPostgresRepository() *AuthPostgresRepository {
-	host := "db"
-	port := "5432"
-	user := "postgres"
-	password := "admin"
-	dbname := "auth"
+type DbCredantials struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	DbName   string
+}
+
+func NewAuthPostgresRepository(credantials DbCredantials) *AuthPostgresRepository {
+	host := credantials.Host
+	port := credantials.Port
+	user := credantials.User
+	password := credantials.Password
+	dbname := credantials.DbName
 
 	conn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		host,
@@ -49,7 +57,7 @@ func (p *AuthPostgresRepository) FindUserByPassword(username string, password st
 		if errors.Is(req.Error, gorm.ErrRecordNotFound) {
 			return nil, nil // Kullanıcı bulunamadığında nil döndürün
 		}
-		return nil, fmt.Errorf("Kullanıcı arama hatası: %v", req.Error)
+		return nil, fmt.Errorf("User couldn't found!: %v", req.Error)
 	}
 	return &user, nil
 }
