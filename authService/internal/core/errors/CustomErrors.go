@@ -1,15 +1,28 @@
 package CustomErrors
 
-type UserNotFoundError struct {
+import "fmt"
+
+type CustomError struct {
+	Message        string
+	HttpStatusCode int
 }
 
-func (e *UserNotFoundError) Error() string {
-	return "User couldn't found!"
+func (e *CustomError) Error() string {
+	return fmt.Sprintf("%s (status: %d)", e.Message, e.HttpStatusCode)
 }
 
-type InvalidTokenError struct {
+func NewCustomError(message string, statusCode int) *CustomError {
+	return &CustomError{
+		Message:        message,
+		HttpStatusCode: statusCode,
+	}
 }
 
-func (e *InvalidTokenError) Error() string {
-	return "Invalid token!"
-}
+var (
+	ErrUserNotFound       = NewCustomError("User couldn't be found!", 403)
+	ErrInvalidToken       = NewCustomError("Invalid token!", 401)
+	ErrUnauthorized       = NewCustomError("Unauthorized access!", 403)
+	ErrInternalError      = NewCustomError("Internal server error!", 500)
+	TokenIsNotValidError  = NewCustomError("Token is not valid!", 400)
+	EmailOrUsernameExists = NewCustomError("this email or username already exists", 400)
+)

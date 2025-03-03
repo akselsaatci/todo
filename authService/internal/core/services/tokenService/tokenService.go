@@ -4,8 +4,9 @@ import (
 	"authService/internal/core/dtos"
 	CustomErrors "authService/internal/core/errors"
 	"authService/internal/core/services/tokenService/claims"
-	"github.com/dgrijalva/jwt-go"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 type TokenService struct {
@@ -43,19 +44,19 @@ func (t *TokenService) ValidateToken(token string) (*dtos.UserDTO, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			return nil, &CustomErrors.InvalidTokenError{}
+			return nil, CustomErrors.ErrInvalidToken
 		}
 		return t.jwtKey, nil
 	}
 
 	jwtToken, err := jwt.ParseWithClaims(token, &claims.Claims{}, keyFunc)
 	if err != nil {
-		return nil, &CustomErrors.InvalidTokenError{}
+		return nil, CustomErrors.ErrInvalidToken
 	}
 
 	payload, ok := jwtToken.Claims.(*claims.Claims)
 	if !ok {
-		return nil, &CustomErrors.InvalidTokenError{}
+		return nil, CustomErrors.ErrInvalidToken
 	}
 
 	user.ID = payload.UserId

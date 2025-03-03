@@ -7,8 +7,9 @@ import (
 	"authService/internal/core/ports"
 	"authService/internal/helper"
 	"fmt"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type AuthService struct {
@@ -27,12 +28,12 @@ func (a *AuthService) AuthorizeUser(username string, password string) (string, e
 	}
 
 	if user == nil {
-		return "", &CustomErrors.UserNotFoundError{}
+		return "", CustomErrors.ErrUserNotFound
 	}
 
 	token, err := a.tokenSerivce.GenerateToken(user.ID.String(), user.UserName, user.NameLastName)
 	if err != nil {
-		return "", fmt.Errorf("Token oluştururken hata oluştu!") // Token oluşturma hatası durumunu geri döndür
+		return "", fmt.Errorf("Error happend while generating a token!")
 	}
 
 	return *token, nil

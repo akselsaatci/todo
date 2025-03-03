@@ -2,8 +2,10 @@ package repo
 
 import (
 	"authService/internal/core/domain"
+	CustomErrors "authService/internal/core/errors"
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -79,7 +81,7 @@ func (p *AuthPostgresRepository) AddUserToDb(user *domain.User) error {
 	doesUserExist := p.db.Where("email = ? OR user_name = ?", user.Email, user.UserName).First(&domain.User{}).Error
 
 	if doesUserExist == nil {
-		return errors.New("this email or username already exists")
+		return CustomErrors.EmailOrUsernameExists
 	}
 
 	result := p.db.Create(&user)

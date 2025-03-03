@@ -1,8 +1,8 @@
 package dtos
 
 type UserDTO struct {
-	ID           string `json:"userId"`
-	NameLastName string `json:"userName"`
-	Username     string `json:"userNameLastname"`
-	Email        string `json:"email"`
+	ID           string `json:"userId" binding:"required"`
+	NameLastName string `json:"nameLastname" binding:"required"`
+	Username     string `json:"userName" binding:"required"`
+	Email        string `json:"email" binding:"required,email"`
 }

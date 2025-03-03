@@ -1,11 +1,11 @@
 package Http
 
 import (
+	"authService/internal/adapters/handlers"
 	Requests "authService/internal/adapters/handlers/Http/Requests"
 	"authService/internal/core/dtos"
 	CustomErrors "authService/internal/core/errors"
 	"authService/internal/core/services"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,76 +24,78 @@ func NewHTTPHandler(authService services.AuthService) *HTTPHandler {
 func (h *HTTPHandler) AuthorizeUser(ctx *gin.Context) {
 
 	req := Requests.AuthorizeUserRequest{}
+
 	err := ctx.ShouldBind(&req)
 	if err != nil {
-		ctx.AbortWithStatus(400)
+		customErr := &CustomErrors.CustomError{
+			Message:        err.Error(),
+			HttpStatusCode: http.StatusBadRequest,
+		}
+		HandleError(ctx, customErr)
 		return
 	}
+
 	token, err := h.authService.AuthorizeUser(req.Username, req.Password)
 
-	if errors.Is(err, &CustomErrors.UserNotFoundError{}) {
-		ctx.JSON(404, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	if errors.Is(err, &CustomErrors.InvalidTokenError{}) {
-		ctx.JSON(401, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
 	if err != nil {
-		ctx.JSON(400, gin.H{
-			"error": err.Error(),
-		})
+		HandleError(ctx, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, token)
+
+	response := handlers.BuildResponse(http.StatusOK, token)
+	ctx.JSON(http.StatusOK, response)
 }
 func (h *HTTPHandler) ValidateToken(ctx *gin.Context) {
 	req := Requests.ValidateTokenRequest{}
 	err := ctx.Bind(&req)
+
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		customErr := &CustomErrors.CustomError{
+			Message:        err.Error(),
+			HttpStatusCode: http.StatusBadRequest,
+		}
+		HandleError(ctx, customErr)
+		return
 	}
 
 	token, err := h.authService.ValidateToken(req.Token)
 
-	if errors.Is(err, &CustomErrors.InvalidTokenError{}) {
-		ctx.AbortWithError(401, err)
+	if err != nil {
+		HandleError(ctx, err)
 		return
 	}
 
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-	ctx.JSON(http.StatusOK, token)
+	response := handlers.BuildResponse(http.StatusOK, token)
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (h *HTTPHandler) RegisterUser(ctx *gin.Context) {
 	req := dtos.AddUserRequest{}
 	err := ctx.Bind(&req)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		customErr := &CustomErrors.CustomError{
+			Message:        err.Error(),
+			HttpStatusCode: http.StatusBadRequest,
+		}
+		HandleError(ctx, customErr)
+		return
 	}
 
 	token, err := h.authService.RegisterUser(req)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		//Shouldnt be error here log this
+		HandleError(ctx, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, token)
+
+	response := handlers.BuildResponse(http.StatusOK, token)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (h *HTTPHandler) GetPublicKey(ctx *gin.Context) {
+	//Should be able to call only internally i suppose
+
+	return
+
 }
